@@ -1,25 +1,45 @@
+from threading import Lock
 from concurrent.futures import ThreadPoolExecutor
 
-import vk_api
-from dotenv import load_dotenv
-import os
+from text_queue import get_text_queue
+from connect_vk import get_data_accounts_vk
+from vk_group import process_vk_chat
 
-load_dotenv()
-
-
-def vk_connect(token):
-    vk_session = vk_api.VkApi(token=token)
-    vk = vk_session.get_api()
-    user = vk.account.getProfileInfo()
-    group = vk.messages.joinChatByInviteLink(link=os.getenv("LINK_CHAT"))
-    vk.messages.send(chat_id=group["chat_id"], message="Hi baby", random_id=0)
-    vk.messages.removeChatUser(chat_id=group["chat_id"], user_id=user["id"])
+from exceptions import ApiVkServiceError
 
 
-def main():
-    with open("tokens.txt") as file:
-        with ThreadPoolExecutor() as executor:
-            executor.map(vk_connect, map(str.strip, file))
+def main() -> None:
+    """
+    Запуск основной логики программы.
+
+    :return: None
+    """
+
+    lock: Lock = Lock()
+    queue = get_text_queue("text.txt")
+    queue_size: int = queue.qsize()
+    timer: int = 1
+
+    try:
+        data_accounts = get_data_accounts_vk("tokens.txt")
+
+    except ApiVkServiceError:
+        print("Ошибка получения данных Vk аккаунтов")
+
+    try:
+        executor = ThreadPoolExecutor()
+
+        for account, user in data_accounts.items():
+            executor.submit(
+                process_vk_chat, account, user, lock, queue, queue_size, timer
+            )
+            timer += 1
+
+    except ApiVkServiceError:
+        print("Ошибка при работе с Vk беседой")
+
+    finally:
+        executor.shutdown()
 
 
 if __name__ == "__main__":
