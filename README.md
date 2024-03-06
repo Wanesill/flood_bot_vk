@@ -1,5 +1,5 @@
 Для использования бота нужно:
-1. Установить виртуальное окружение: python3 -m venv venv - Linux, python -m venv venv
+1. Установить виртуальное окружение: python3 -m venv venv - Linux, python -m venv venv - Windows
 2. Активировать его: source venv/bin/activate - Linux, venv/Scripts/activate - Windows
 3. Стачать зависимости: pip install -r requirements.txt
 4. Создать файл "tokens.txt" и вставлять в каждую сточку токен аккаунта VK. Токен можно получить на сайте: https://vkhost.github.io/
