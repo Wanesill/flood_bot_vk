@@ -1,44 +1,25 @@
 import os
 import dotenv
-import time
 
 from typing import Any
-from threading import Lock
-from queue import Queue
 
 from vk_api.vk_api import VkApiMethod
 
 from exceptions import ApiVkServiceError
 
 
-def process_vk_chat(
-    account: VkApiMethod,
-    user: dict[str, Any],
-    lock: Lock,
-    queue: Queue,
-    queue_size: int,
-    timer: int,
-) -> None:
+def process_vk_chat(account: VkApiMethod, user: dict[str, Any], message: str) -> None:
     """
     Запуск функций по работе с Vk беседой.
 
     :param account: Vk аккаунт
     :param user: Данные Vk аккаунта
-    :param lock: Блокировка
-    :param queue: Очередь текстовых данных
-    :param queue_size: Размер очереди
-    :param timer: Таймер
+    :param message: Строка из файла text.txt
     :return: None
     """
 
     chat = __join_vk_chat(account)
-    time.sleep(timer)
-
-    with lock:
-        message = queue.get()
-        __send_message_chat_vk_chat(account, chat, message)
-
-    time.sleep(queue_size + 1 - timer)
+    __send_message_chat_vk_chat(account, chat, message)
     __leave_vk_chat(account, chat, user)
 
 

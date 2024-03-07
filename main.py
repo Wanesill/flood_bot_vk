@@ -1,7 +1,5 @@
-from threading import Lock
 from concurrent.futures import ThreadPoolExecutor
 
-from text_queue import get_text_queue
 from connect_vk import get_data_accounts_vk
 from vk_group import process_vk_chat
 
@@ -15,13 +13,8 @@ def main() -> None:
     :return: None
     """
 
-    lock: Lock = Lock()
-    queue = get_text_queue("text.txt")
-    queue_size: int = queue.qsize()
-    timer: int = 1
-
     try:
-        data_accounts = get_data_accounts_vk("tokens.txt")
+        data_accounts = list(get_data_accounts_vk("tokens.txt").items())
 
     except ApiVkServiceError:
         print("Ошибка получения данных Vk аккаунтов")
@@ -29,11 +22,11 @@ def main() -> None:
     try:
         executor = ThreadPoolExecutor()
 
-        for account, user in data_accounts.items():
-            executor.submit(
-                process_vk_chat, account, user, lock, queue, queue_size, timer
-            )
-            timer += 1
+        with open("text.txt", encoding="utf-8") as file_text:
+            for index, row in enumerate(file_text):
+                line = row.strip()
+                account, user = data_accounts[index]
+                executor.submit(process_vk_chat, account, user, line)
 
     except ApiVkServiceError:
         print("Ошибка при работе с Vk беседой")
