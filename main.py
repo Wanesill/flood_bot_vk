@@ -19,13 +19,15 @@ def main() -> None:
     except ApiVkServiceError:
         print("Ошибка получения данных Vk аккаунтов")
 
+    len_data_account = len(data_accounts)
+
     try:
         executor = ThreadPoolExecutor()
 
         with open("text.txt", encoding="utf-8") as file_text:
             for index, row in enumerate(file_text):
                 line = row.strip()
-                account, user = data_accounts[index]
+                account, user = data_accounts[index % len_data_account]
                 executor.submit(process_vk_chat, account, user, line)
 
     except ApiVkServiceError:
